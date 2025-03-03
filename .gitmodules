@@ -1,0 +1,4 @@
+[submodule "HOG_SVM_FPGA"]
+	path = HOG_SVM_FPGA
+	url = https://github.com/Digital-Camera-ASIC/HOG_SVM_FPGA
+	branch = FPGA
