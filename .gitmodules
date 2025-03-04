@@ -2,3 +2,6 @@
 	path = HOG_SVM_FPGA
 	url = https://github.com/Digital-Camera-ASIC/HOG_SVM_FPGA
 	branch = FPGA
+[submodule "AXI4-Frame-Fetch"]
+	path = AXI4-Frame-Fetch
+	url = https://github.com/Digital-Camera-ASIC/AXI4-Frame-Fetch
