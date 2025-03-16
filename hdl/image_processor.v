@@ -1,14 +1,13 @@
-module SOC #(
-    // Features configuration
-    parameter   IP_AMT              = 1,    // Number of Image processor    
-    // AXI4 configurati
-    parameter   MST_ID_W            = 3,
-    parameter   DATA_WIDTH          = 256,
-    parameter   ADDR_WIDTH          = 32,
-    parameter   TRANS_BURST_W       = 2,    // Width of xBURST 
-    parameter   TRANS_DATA_LEN_W    = 3,    // Bus width of xLEN
-    parameter   TRANS_DATA_SIZE_W   = 3,    // Bus width of xSIZE
-    parameter   TRANS_WR_RESP_W     = 2,
+module image_processor #(
+    // Image Processor
+    parameter IP_AMT            = 1,    // Image processor amount  
+    parameter IP_DATA_W         = 256,
+    // AXI-Stream configuration
+    parameter AXIS_TID_W        = 2,
+    parameter AXIS_TDEST_W      = (IP_ADDR_W > 1) ? IP_ADDR_W : 1,
+    parameter AXIS_TDATA_W      = IP_DATA_W,
+    parameter AXIS_TKEEP_W      = AXIS_TDATA_W/8,
+    parameter AXIS_TSTRB_W      = AXIS_TDATA_W/8,
     // Image processor configuaration
     parameter   PG_WIDTH            = 256,
     parameter   CELL_WIDTH          = 768,
@@ -29,75 +28,65 @@ module SOC #(
     parameter   SW_W                = 11, // slide window width
     parameter   CELL_S              = 10 // Size of cell, default 8x8 pixel and border
 )(
-    input clk,
-    input rst
+    input                           s_aclk,
+    input                           s_aresetn,
+    // -- AXI-Stream interface
+    input   [AXIS_TID_W-1:0]        s_tid_i,    
+    input   [AXIS_TDEST_W-1:0]      s_tdest_i, 
+    input   [AXIS_TDATA_W-1:0]      s_tdata_i,
+    input   [AXIS_TKEEP_W-1:0]      s_tkeep_i,
+    input   [AXIS_TSTRB_W-1:0]      s_tstrb_i,
+    input                           s_tlast_i,
+    input                           s_tvalid_i,
+    output                          s_tready_o
 );
     
     wire [CELL_WIDTH - 1 : 0] cell_data;
     wire cell_valid;
     wire cell_ready; 
-    axi4_frame_fetch #(
+    axi_frame_fetch #(
         // Features configuration
-        .IP_AMT               (IP_AMT),
-        // Number of Image processor    
-        // AXI4 configurati
-        .MST_ID_W             (MST_ID_W),
-        .DATA_WIDTH           (DATA_WIDTH),
-        .ADDR_WIDTH           (ADDR_WIDTH),
-        .TRANS_BURST_W        (TRANS_BURST_W),
-        // Width of xBURST 
-        .TRANS_DATA_LEN_W     (TRANS_DATA_LEN_W),
-        // Bus width of xLEN
-        .TRANS_DATA_SIZE_W    (TRANS_DATA_SIZE_W),
-        // Bus width of xSIZE
-        .TRANS_WR_RESP_W      (TRANS_WR_RESP_W),
+        .IP_AMT             (IP_AMT),
+        .IP_DATA_W          (IP_DATA_W),
+        .AXIS_TID_W         (AXIS_TID_W),
+        .AXIS_TDEST_W       (AXIS_TDEST_W),
+        .AXIS_TDATA_W       (AXIS_TDATA_W),
+        .AXIS_TKEEP_W       (AXIS_TKEEP_W),
+        .AXIS_TSTRB_W       (AXIS_TSTRB_W),
         // Image processor configuaration
-        .PG_WIDTH             (PG_WIDTH),
-        .CELL_WIDTH           (CELL_WIDTH),
-        .CELL_NUM             (CELL_NUM),
-        .FRAME_ROW_CNUM       (FRAME_ROW_CNUM),
+        .PG_WIDTH           (PG_WIDTH),
+        .CELL_WIDTH         (CELL_WIDTH),
+        .CELL_NUM           (CELL_NUM),
+        .FRAME_ROW_CNUM     (FRAME_ROW_CNUM),
         // 30 cells
-        .FRAME_COL_CNUM       (FRAME_COL_CNUM),
+        .FRAME_COL_CNUM     (FRAME_COL_CNUM),
         // 40 cells
-        .CELL_ROW_PNUM        (CELL_ROW_PNUM),
+        .CELL_ROW_PNUM      (CELL_ROW_PNUM),
         // 8 pixels
-        .CELL_COL_PNUM        (CELL_COL_PNUM),
+        .CELL_COL_PNUM      (CELL_COL_PNUM),
         // 8 pixels
-        .FRAME_COL_BNUM       (FRAME_COL_CNUM/2),
+        .FRAME_COL_BNUM     (FRAME_COL_CNUM/2),
         // 20 blocks
-        .FRAME_COL_PGNUM      (FRAME_COL_CNUM/4)
+        .FRAME_COL_PGNUM    (FRAME_COL_CNUM/4)
         // 10 pixel groups
-    ) u_axi4_frame_fetch (
+    ) aff (
         // Input declaration
         // -- Global signals
-        .ACLK_i               (clk),
-        .ARESETn_i            (rst),
-        // -- To Master
-        // ---- Write address channel
-        .m_AWID_i             (),
-        .m_AWADDR_i           (),
-        .m_AWVALID_i          (),
-        // ---- Write data channel
-        .m_WDATA_i            (),
-        .m_WLAST_i            (),
-        .m_WVALID_i           (),
-        // ---- Write response channel
-        .m_BREADY_i           (),
+        .s_aclk             (s_aclk),
+        .s_aresetn          (s_aresetn),
+        // AXI-Stream
+        .s_tid_i            (s_tid_i),
+        .s_tdest_i          (s_tdest_i),
+        .s_tdata_i          (s_tdata_i),
+        .s_tkeep_i          (s_tkeep_i),
+        .s_tstrb_i          (s_tstrb_i),
+        .s_tlast_i          (s_tlast_i),
+        .s_tvalid_i         (s_tvalid_i),
+        .s_tready_o         (s_tready_o),
         // -- To HOG
-        .cell_ready_i         (cell_ready),
-        // Output declaration
-        // -- To Master 
-        // ---- Write address channel (master)
-        .m_AWREADY_o          (),
-        // ---- Write data channel (master)
-        .m_WREADY_o           (),
-        // ---- Write response channel (master)
-        .m_BID_o              (),
-        .m_BRESP_o            (),
-        .m_BVALID_o           (),
-        // -- To HOG
-        .cell_data_o          (cell_data),
-        .cell_valid_o         (cell_valid)
+        .cell_data_o        (cell_data),
+        .cell_valid_o       (cell_valid),
+        .cell_ready_i       (cell_ready)
     );
     hog_svm #(
         .PIX_W           (PIX_W),
@@ -117,10 +106,10 @@ module SOC #(
         .SW_W            (SW_W),
         // slide window width
         .CELL_S          (CELL_S)
-    ) u_hog_svm (
+    ) hs (
         //// hog if
-        .clk             (clk),
-        .rst             (rst),
+        .clk             (s_aclk),
+        .rst             (s_aresetn),
         .ready           (cell_valid_o),
         .request         (cell_ready),
         .i_data_fetch    (cell_data),
