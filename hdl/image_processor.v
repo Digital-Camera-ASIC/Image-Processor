@@ -1,6 +1,7 @@
 module image_processor #(
     // Image Processor
     parameter IP_AMT            = 1,    // Image processor amount  
+    parameter IP_ADDR_W         = $clog2(IP_AMT),
     parameter IP_DATA_W         = 256,
     // AXI-Stream configuration
     parameter AXIS_TID_W        = 2,
@@ -47,6 +48,7 @@ module image_processor #(
     axi_frame_fetch #(
         // Features configuration
         .IP_AMT             (IP_AMT),
+        .IP_ADDR_W          (IP_ADDR_W),
         .IP_DATA_W          (IP_DATA_W),
         .AXIS_TID_W         (AXIS_TID_W),
         .AXIS_TDEST_W       (AXIS_TDEST_W),
