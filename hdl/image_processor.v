@@ -39,7 +39,12 @@ module image_processor #(
     input   [AXIS_TSTRB_W-1:0]      s_tstrb_i,
     input                           s_tlast_i,
     input                           s_tvalid_i,
-    output                          s_tready_o
+    output                          s_tready_o,
+    // -- HOG_SVM
+    output                          o_valid,
+    output                          is_person,
+    output  [SW_W - 1   : 0]        sw_id,
+    output                          led
 );
     
     wire [CELL_WIDTH - 1 : 0] cell_data;
@@ -112,7 +117,7 @@ module image_processor #(
         //// hog if
         .clk             (s_aclk),
         .rst             (s_aresetn),
-        .ready           (cell_valid_o),
+        .ready           (cell_valid),
         .request         (cell_ready),
         .i_data_fetch    (cell_data),
         //// svm if
