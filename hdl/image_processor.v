@@ -122,13 +122,13 @@ module image_processor #(
         .i_data_fetch    (cell_data),
         //// svm if
         // ram interface
-        .addr_a          (),
-        .write_en        (),
-        .i_data_a        (),
+        .addr_a          (6'h00),
+        .write_en        (1'b0),
+        .i_data_a        (2100'd0),
         .o_data_a        (),
         // bias
-        .bias            (),
-        .b_load          (),
+        .bias            (20'h0),
+        .b_load          (1'b0),
         // svm if
         .o_valid         (o_valid),
         .is_person       (is_person),
